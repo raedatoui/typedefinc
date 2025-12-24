@@ -1,6 +1,6 @@
 'use client';
 
-import { useFrame, useLoader, useThree } from '@react-three/fiber';
+import { useFrame, useLoader } from '@react-three/fiber';
 import { useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { MathUtils } from 'three';
@@ -154,9 +154,9 @@ const vertexShader = `
         float rotTime = uTime * 0.5;
         // Generate random axis based on UV
         vec3 axis = normalize(vec3(
-            snoise(vec3(aInstanceUV * 5.0, 10.0)),
-            snoise(vec3(aInstanceUV * 5.0, 20.0)),
-            snoise(vec3(aInstanceUV * 5.0, 30.0))
+            snoise(vec3(aInstanceUV * 10.0, 10.0)),
+            snoise(vec3(aInstanceUV * 10.0, 20.0)),
+            snoise(vec3(aInstanceUV * 10.0, 30.0))
         ));
         // Generate random speed
         float speed = 1.0 + snoise(vec3(aInstanceUV * 5.0, 40.0));
@@ -230,7 +230,7 @@ const fragmentShader = `
   }
 `;
 
-// "Blue" palette 
+// "Blue" palette
 const palette = {
     BG: new THREE.Color('#5963fa'),
     sin: {
@@ -247,26 +247,25 @@ interface FragmentShaderArtProps {
 
 export default function FragmentShaderArt({ active }: FragmentShaderArtProps) {
     const meshRef = useRef<THREE.InstancedMesh>(null);
-    const { size } = useThree();
     const texture = useLoader(THREE.TextureLoader, '/10.png');
 
     // Grid Configuration
-    const gridSize = 300; 
+    const gridSize = 300;
     const count = gridSize * gridSize;
 
     const { aGridPos, aInstanceUV } = useMemo(() => {
         const gridPos = new Float32Array(count * 3);
         const uvs = new Float32Array(count * 2);
-        
+
         for (let i = 0; i < gridSize; i++) {
             for (let j = 0; j < gridSize; j++) {
                 const index = i * gridSize + j;
-                
-                const x = (j / gridSize) - 0.5;
-                const y = (i / gridSize) - 0.5;
-                
-                gridPos[index * 3] = x * 4.0; 
-                gridPos[index * 3 + 1] = y * 4.0; 
+
+                const x = j / gridSize - 0.5;
+                const y = i / gridSize - 0.5;
+
+                gridPos[index * 3] = x * 4.0;
+                gridPos[index * 3 + 1] = y * 4.0;
                 gridPos[index * 3 + 2] = 0;
 
                 uvs[index * 2] = j / gridSize;
@@ -310,38 +309,34 @@ export default function FragmentShaderArt({ active }: FragmentShaderArtProps) {
                 Math.sin(time * 0.25 + 3.0) * 0.5 + 0.5,
                 Math.sin(time * 0.35 + 5.0) * 0.5 + 0.5
             );
-            
+
             // Interaction Logic
             const targetScramble = active ? 1.0 : 0.0;
             const current = mat.uniforms.uScramble.value;
-            const speed = active ? 4.0 : 3.0; 
-            
+            const speed = active ? 4.0 : 3.0;
+
             // Smoothly interpolate scrambling
             mat.uniforms.uScramble.value = MathUtils.lerp(current, targetScramble, delta * speed);
         }
     });
 
     return (
-        <instancedMesh 
-            ref={meshRef} 
+        <instancedMesh
+            ref={meshRef}
             args={[undefined, undefined, count]}
-            onPointerOver={() => document.body.style.cursor = 'pointer'}
-            onPointerOut={() => document.body.style.cursor = 'auto'}
+            onPointerOver={() => (document.body.style.cursor = 'pointer')}
+            onPointerOut={() => (document.body.style.cursor = 'auto')}
             onPointerMove={(e) => {
                 if (!active && e.uv) {
                     uniforms.uClickUv.value.copy(e.uv);
                 }
             }}
         >
-            <boxGeometry args={[0.06, 0.06, 0.06]}> 
+            <boxGeometry args={[0.08, 0.08, 0.08]}>
                 <instancedBufferAttribute attach="attributes-aGridPos" args={[aGridPos, 3]} />
                 <instancedBufferAttribute attach="attributes-aInstanceUV" args={[aInstanceUV, 2]} />
             </boxGeometry>
-            <shaderMaterial
-                vertexShader={vertexShader}
-                fragmentShader={fragmentShader}
-                uniforms={uniforms}
-            />
+            <shaderMaterial vertexShader={vertexShader} fragmentShader={fragmentShader} uniforms={uniforms} />
         </instancedMesh>
     );
 }

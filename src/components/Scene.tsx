@@ -33,6 +33,7 @@ function SceneContent() {
             // provided we aren't crossing the singularity often.
             spherical.theta = THREE.MathUtils.lerp(spherical.theta, 0, delta * 2);
             spherical.phi = THREE.MathUtils.lerp(spherical.phi, Math.PI / 2, delta * 2);
+            spherical.radius = THREE.MathUtils.lerp(spherical.radius, 5, delta * 2);
 
             // Reconstruct position
             offset.setFromSpherical(spherical);
@@ -40,18 +41,32 @@ function SceneContent() {
 
             camera.lookAt(target);
             controlsRef.current.update();
+        } else if (active && controlsRef.current) {
+            const camera = state.camera;
+            const target = controlsRef.current.target;
+
+            // Calculate direction from target to camera
+            const direction = new THREE.Vector3().subVectors(camera.position, target).normalize();
+
+            // Zoom out a bit when active (from 4 to 12)
+            const currentDist = camera.position.distanceTo(target);
+            const targetDist = 14;
+            const newDist = THREE.MathUtils.lerp(currentDist, targetDist, delta * 2);
+
+            camera.position.copy(target).add(direction.multiplyScalar(newDist));
+            controlsRef.current.update();
         }
     });
 
     return (
         <>
-            <PerspectiveCamera makeDefault position={[0, 0, 12]} />
+            <PerspectiveCamera makeDefault position={[0, 0, 5]} />
             <OrbitControls
                 ref={controlsRef}
-                enableZoom={true}
+                enableZoom={false}
                 makeDefault
-                minDistance={6}
-                maxDistance={6}
+                minDistance={5}
+                maxDistance={20}
                 onStart={() => setActive(true)}
                 onEnd={() => setActive(false)}
             />
