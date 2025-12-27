@@ -249,6 +249,9 @@ export default function FragmentShaderArt({ active }: FragmentShaderArtProps) {
     const meshRef = useRef<THREE.InstancedMesh>(null);
     const texture = useLoader(THREE.TextureLoader, '/10.png');
 
+    // Randomize the starting point of the color cycle
+    const colorOffset = useMemo(() => Math.random() * 10000, []);
+
     // Grid Configuration
     const gridSize = 300;
     const count = gridSize * gridSize;
@@ -298,7 +301,7 @@ export default function FragmentShaderArt({ active }: FragmentShaderArtProps) {
             mat.uniforms.uTime.value += delta * 1.5;
 
             // Animate Colors
-            const time = state.clock.elapsedTime;
+            const time = state.clock.elapsedTime + colorOffset;
             mat.uniforms.uColor1.value.setRGB(
                 Math.sin(time * 0.1) * 0.5 + 0.5,
                 Math.sin(time * 0.2 + 2.0) * 0.5 + 0.5,

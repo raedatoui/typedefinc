@@ -1,6 +1,6 @@
 'use client';
 
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, PerspectiveCamera } from '@react-three/drei';
 import FragmentShaderArt from './FragmentShaderArt';
 import { useState, useRef, useMemo } from 'react';
@@ -10,6 +10,7 @@ function SceneContent() {
     // Track interaction state
     const [active, setActive] = useState(false);
     const controlsRef = useRef<any>(null);
+    const { size } = useThree();
 
     const initialTarget = useMemo(() => new THREE.Vector3(0, 0, 0), []);
     const spherical = useMemo(() => new THREE.Spherical(), []);
@@ -33,7 +34,10 @@ function SceneContent() {
             // provided we aren't crossing the singularity often.
             spherical.theta = THREE.MathUtils.lerp(spherical.theta, 0, delta * 2);
             spherical.phi = THREE.MathUtils.lerp(spherical.phi, Math.PI / 2, delta * 2);
-            spherical.radius = THREE.MathUtils.lerp(spherical.radius, 5, delta * 2);
+
+            const aspect = size.width / size.height;
+            const targetRadius = aspect < 1 ? 4.5 / aspect : 5;
+            spherical.radius = THREE.MathUtils.lerp(spherical.radius, targetRadius, delta * 2);
 
             // Reconstruct position
             offset.setFromSpherical(spherical);
@@ -77,8 +81,8 @@ function SceneContent() {
 
 export default function Scene() {
     return (
-        <div className="w-full h-full min-h-[400px] bg-black">
-            <Canvas>
+        <div className="w-full h-full min-h-screen bg-black">
+            <Canvas style={{ width: '100%', height: '100%', touchAction: 'none' }} dpr={[1, 2]}>
                 <SceneContent />
             </Canvas>
         </div>
